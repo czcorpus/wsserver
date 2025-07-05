@@ -4,7 +4,7 @@ go 1.23.4
 
 require (
 	github.com/czcorpus/cnc-gokit v0.14.0
-	github.com/czcorpus/scollector v0.0.10
+	github.com/czcorpus/scollector v0.0.12
 	github.com/gin-gonic/gin v1.10.1
 	github.com/rs/zerolog v1.34.0
 	github.com/sajari/word2vec v1.0.1

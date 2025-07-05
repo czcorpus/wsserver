@@ -45,10 +45,13 @@ func splitByLastUnderscore(s string) (string, string) {
 	return s[:lastIndex], s[lastIndex+1:]
 }
 
-func mergeByFunc(data []ResultRow) []ResultRow {
+func mergeByFunc(data []ResultRow, srchWord string) []ResultRow {
 	merged := collections.NewMultidict[ResultRow]()
 	ans := make([]ResultRow, 0, len(data))
 	for _, item := range data {
+		if item.Word == srchWord {
+			continue
+		}
 		merged.Add(item.Word, item)
 	}
 	for k, v := range merged.Iterate {

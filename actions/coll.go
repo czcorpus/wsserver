@@ -39,6 +39,7 @@ type simpleCollocation struct {
 	Collocate   lemmaInfo `json:"collocate"`
 	LogDice     float64   `json:"logDice"`
 	TScore      float64   `json:"tscore"`
+	MutualDist  float64   `json:"mutualDist"`
 }
 
 func (a *ActionHandler) Collocations(ctx *gin.Context) {
@@ -125,8 +126,9 @@ func (a *ActionHandler) Collocations(ctx *gin.Context) {
 				Value:         col,
 				SyntacticFunc: colf,
 			},
-			LogDice: math.Round(v.LogDice*100) / 100,
-			TScore:  math.Round(v.TScore*100) / 100,
+			LogDice:    math.Round(v.LogDice*100) / 100,
+			TScore:     math.Round(v.TScore*100) / 100,
+			MutualDist: float64(v.AvgMutualDist()),
 		}
 	}
 	uniresp.WriteJSONResponse(ctx.Writer, ans)

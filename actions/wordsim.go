@@ -57,7 +57,7 @@ func exportResult(matches []word2vec.Match, minScore float32) []ResultRow {
 	if len(matches) < 2 {
 		return ans
 	}
-	for _, v := range matches[1:] {
+	for _, v := range matches {
 		if v.Score >= minScore {
 			var pos string
 			word := v.Word
@@ -149,7 +149,7 @@ func (a *ActionHandler) WordSimilarity(ctx *gin.Context) {
 			ctx, lastNotFoundErr, http.StatusNotFound)
 		return
 	}
-	ans = mergeByFunc(ans)
+	ans = mergeByFunc(ans, word)
 	sort.Slice(ans, func(i, j int) bool {
 		return ans[i].Score > ans[j].Score
 	})

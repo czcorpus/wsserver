@@ -13,8 +13,8 @@ github.com/cloudwego/iasm v0.2.0/go.mod h1:8rXZaNYT2n95jn+zTI1sDr+IgcD2GVs0nlbbQ
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
 github.com/czcorpus/cnc-gokit v0.14.0 h1:zLFxyfq9hhJFPTLjc0Kze1KakiU+bUa8AHdwRXxTuOQ=
 github.com/czcorpus/cnc-gokit v0.14.0/go.mod h1:4vHbyf+qV8kHHwvWnPhiccMo5pVGY3tnSSRCP0mr2xc=
-github.com/czcorpus/scollector v0.0.10 h1:lG1aZhY5uKqkFzqnPmMExTv/HBjaTKCde2A38EWi7ZU=
-github.com/czcorpus/scollector v0.0.10/go.mod h1:YoqyMd16JEsJ8h1RpuLFZxq83LZi1dOJCz3R41uz+U4=
+github.com/czcorpus/scollector v0.0.12 h1:JQlJ9fbHoawHUIAypz36iRw8QXBCKiH23cyiV652oao=
+github.com/czcorpus/scollector v0.0.12/go.mod h1:YoqyMd16JEsJ8h1RpuLFZxq83LZi1dOJCz3R41uz+U4=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

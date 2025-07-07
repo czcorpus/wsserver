@@ -76,7 +76,7 @@ func (a *ActionHandler) Collocations(ctx *gin.Context) {
 	}
 	db := a.collDBs[corpusID]
 	if syntaxFn != "" {
-		word = word + "-" + syntaxFn
+		word = word + "_" + syntaxFn
 	}
 	result, err := db.CalculateMeasures(word, int(modelInfo.CorpusSize), limit, "tscore") // TODO
 	if err != nil {

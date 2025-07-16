@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package config
 
 import (
 	"encoding/json"
@@ -68,7 +68,7 @@ func ApplyDefaults(conf *Config) {
 
 }
 
-func loadConfig(path string) (*Config, error) {
+func Load(path string) (*Config, error) {
 	if path == "" {
 		return nil, fmt.Errorf("Config path not specified")
 	}

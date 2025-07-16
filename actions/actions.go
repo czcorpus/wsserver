@@ -20,10 +20,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/czcorpus/cnc-gokit/unireq"
 	"github.com/czcorpus/cnc-gokit/uniresp"
-	"github.com/czcorpus/scollector/storage"
-	"github.com/czcorpus/wsserver/corpora"
 	"github.com/czcorpus/wsserver/model"
+	"github.com/czcorpus/wsserver/queries"
 	"github.com/gin-gonic/gin"
 )
 
@@ -31,25 +31,14 @@ import (
 
 // ActionHandler wraps all the HTTP actions of word-sim-service
 type ActionHandler struct {
-	modelProvider *model.Provider
-	corpora       map[string]corpora.Info
-	collDBs       CollDBMap
+	models   queries.W2VModelProvider
+	searcher *queries.SearchProvider
 }
 
 // HandleModelList provides listing of all the configured w2v models for a specified corpus
 func (a *ActionHandler) HandleModelList(ctx *gin.Context) {
 	corpusID := ctx.Param("corpusId")
-	ans, err := a.modelProvider.ListModels(corpusID)
-	if err != nil {
-		uniresp.RespondWithErrorJSON(ctx, err, http.StatusInternalServerError)
-		return
-	}
-	uniresp.WriteJSONResponse(ctx.Writer, ans)
-}
-
-// HandleCorporaList provides list of all the configured corpora
-func (a *ActionHandler) HandleCorporaList(ctx *gin.Context) {
-	ans, err := a.modelProvider.ListCorpora()
+	ans, err := a.models.ListModels(corpusID)
 	if err != nil {
 		uniresp.RespondWithErrorJSON(ctx, err, http.StatusInternalServerError)
 		return
@@ -59,38 +48,66 @@ func (a *ActionHandler) HandleCorporaList(ctx *gin.Context) {
 
 func (a *ActionHandler) HandleModelInfo(ctx *gin.Context) {
 	corpusID := ctx.Param("corpusId")
-	info, ok := a.corpora[corpusID]
-	if !ok {
+	modelID := ctx.Param("modelId")
+	info, err := a.models.FindModel(corpusID, modelID)
+	if err == model.ErrModelConfNotFound {
 		uniresp.RespondWithErrorJSON(
 			ctx,
-			fmt.Errorf("corpus not found"),
+			err,
 			http.StatusNotFound,
 		)
 		return
+
+	} else if err != nil {
+		uniresp.RespondWithErrorJSON(
+			ctx,
+			err,
+			http.StatusInternalServerError,
+		)
+		return
 	}
-	resp := corpora.NewInfoResponse(info, "cs-CZ") // TOOD locale
-	uniresp.WriteJSONResponse(ctx.Writer, resp)
+	uniresp.WriteJSONResponse(ctx.Writer, info)
+}
+
+// WordSimilarity handles search actions for similar words
+func (a *ActionHandler) WordSimilarity(ctx *gin.Context) {
+	corpusID := ctx.Param("corpusId")
+	modelID := ctx.Param("modelId")
+
+	limit, ok := unireq.GetURLIntArgOrFail(ctx, "limit", 10)
+	if !ok {
+		uniresp.RespondWithErrorJSON(ctx, fmt.Errorf("invalid value of 'limit'"), http.StatusUnprocessableEntity)
+		return
+	}
+	minScore, ok := unireq.GetURLFloatArgOrFail(ctx, "minScore", 0)
+	if !ok {
+		uniresp.RespondWithErrorJSON(ctx, fmt.Errorf("invalid value of 'limit'"), http.StatusUnprocessableEntity)
+		return
+	}
+	word := ctx.Param("word")
+	posOrSfn := ctx.Param("fn")
+
+	res, err := a.searcher.SimilarlyUsedWords(
+		ctx, corpusID, modelID, posOrSfn, word, limit, float32(minScore),
+	)
+	if !err.IsZero() {
+		uniresp.RespondWithErrorJSON(
+			ctx, err, mapError(err),
+		)
+	}
+	uniresp.WriteJSONResponse(ctx.Writer, res)
+
 }
 
 // NewActionHandler is a recommended factory function for creating ActionHandler instance
 func NewActionHandler(
 	dataDir string,
-	models []model.ModelConf,
-	corpora map[string]corpora.Info,
+	models queries.W2VModelProvider,
+	searcher *queries.SearchProvider,
 ) (*ActionHandler, error) {
-	collDbs := make(CollDBMap)
-	for _, conf := range models {
-		if conf.SyntaxDatabasePath != "" {
-			db, err := storage.OpenDB(conf.SyntaxDatabasePath)
-			if err != nil {
-				return nil, fmt.Errorf("failed to instantiate coll database for %s: %w", conf.Corpname, err)
-			}
-			collDbs[conf.Corpname] = db
-		}
-	}
+
 	return &ActionHandler{
-		modelProvider: model.NewProvider(dataDir, models),
-		corpora:       corpora,
-		collDBs:       collDbs,
+		models:   models,
+		searcher: searcher,
 	}, nil
 }

@@ -27,6 +27,9 @@ import (
 	"time"
 
 	"github.com/czcorpus/wsserver/actions"
+	"github.com/czcorpus/wsserver/config"
+	"github.com/czcorpus/wsserver/model"
+	"github.com/czcorpus/wsserver/queries"
 
 	"github.com/czcorpus/cnc-gokit/logging"
 	"github.com/czcorpus/cnc-gokit/uniresp"
@@ -38,7 +41,7 @@ var (
 	version     string
 	buildDate   string
 	gitCommit   string
-	versionInfo = VersionInfo{
+	versionInfo = config.VersionInfo{
 		Version:   version,
 		BuildDate: buildDate,
 		GitCommit: gitCommit,
@@ -54,7 +57,7 @@ func main() {
 	engine.Use(uniresp.AlwaysJSONContentType())
 
 	if flag.Arg(0) != "" {
-		conf, err := loadConfig(flag.Arg(0))
+		conf, err := config.Load(flag.Arg(0))
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to load config: %s\n", err)
 			os.Exit(1)
@@ -67,8 +70,26 @@ func main() {
 			stop()
 		}()
 
+		collDbMap, err := queries.NewCollDbMap(conf.Models)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to instantiate collocation databases: %s\n", err)
+			os.Exit(1)
+		}
+
+		w2vModels := model.NewProvider(conf.DataDir, conf.Models)
+
+		searcher, err := queries.NewSearchProvider(
+			conf.DataDir,
+			collDbMap,
+			w2vModels,
+		)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to instantiate searcher: %s\n", err)
+			os.Exit(1)
+		}
+
 		log.Printf("INFO: starting to listen on %s:%d", conf.ListenAddress, conf.ListenPort)
-		handler, err := actions.NewActionHandler(conf.DataDir, conf.Models, conf.Corpora)
+		handler, err := actions.NewActionHandler(conf.DataDir, w2vModels, searcher)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to instantiate API handler: %s\n", err)
 			os.Exit(1)
@@ -91,11 +112,7 @@ func main() {
 			handler.Collocations,
 		)
 		engine.GET(
-			"/dataset",
-			handler.HandleCorporaList,
-		)
-		engine.GET(
-			"/dataset/:corpusId",
+			"/dataset/:corpusId/similarWords/:modelId",
 			handler.HandleModelInfo,
 		)
 		engine.GET(

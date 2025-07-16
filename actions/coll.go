@@ -1,14 +1,11 @@
 package actions
 
 import (
-	"errors"
 	"fmt"
-	"math"
 	"net/http"
 
 	"github.com/czcorpus/cnc-gokit/unireq"
 	"github.com/czcorpus/cnc-gokit/uniresp"
-	"github.com/czcorpus/wsserver/model"
 	"github.com/gin-gonic/gin"
 )
 
@@ -29,19 +26,6 @@ type collGroupedResponse struct {
 	Error   error             `json:"error,omitempty"`
 }
 
-type lemmaInfo struct {
-	Value         string `json:"value"`
-	SyntacticFunc string `json:"syntacticFunc"`
-}
-
-type simpleCollocation struct {
-	SearchMatch lemmaInfo `json:"searchMatch"`
-	Collocate   lemmaInfo `json:"collocate"`
-	LogDice     float64   `json:"logDice"`
-	TScore      float64   `json:"tscore"`
-	MutualDist  float64   `json:"mutualDist"`
-}
-
 func (a *ActionHandler) Collocations(ctx *gin.Context) {
 
 	corpusID := ctx.Param("corpusId")
@@ -53,34 +37,15 @@ func (a *ActionHandler) Collocations(ctx *gin.Context) {
 		uniresp.RespondWithErrorJSON(ctx, fmt.Errorf("invalid value of 'limit'"), http.StatusUnprocessableEntity)
 		return
 	}
-	/*
-		minScore, ok := unireq.GetURLFloatArgOrFail(ctx, "minScore", 0)
-		if !ok {
-			uniresp.RespondWithErrorJSON(ctx, fmt.Errorf("invalid value of 'limit'"), http.StatusUnprocessableEntity)
-			return
-		}
-	*/
-
-	if !a.collDBs.Contains(corpusID) {
-		uniresp.RespondWithErrorJSON(ctx, fmt.Errorf("dataset %s not found", corpusID), http.StatusNotFound)
+	minScore, ok := unireq.GetURLFloatArgOrFail(ctx, "minScore", 0)
+	if !ok {
+		uniresp.RespondWithErrorJSON(ctx, fmt.Errorf("invalid value of 'limit'"), http.StatusUnprocessableEntity)
 		return
 	}
-	modelInfo, err := a.modelProvider.FindModel(corpusID, "nce") // TODO
-	var errNotFound model.ModelNotFoundError
-	if errors.As(err, &errNotFound) {
-		uniresp.RespondWithErrorJSON(ctx, err, http.StatusNotFound)
-		return
 
-	} else if err != nil {
-		uniresp.RespondWithErrorJSON(ctx, err, http.StatusInternalServerError)
-	}
-	db := a.collDBs[corpusID]
-	if syntaxFn != "" {
-		word = word + "_" + syntaxFn
-	}
-	result, err := db.CalculateMeasures(word, int(modelInfo.CorpusSize), limit, "tscore") // TODO
-	if err != nil {
-		uniresp.RespondWithErrorJSON(ctx, err, http.StatusInternalServerError)
+	result, err := a.searcher.Collocations(ctx, corpusID, syntaxFn, word, limit, int(minScore))
+	if !err.IsZero() {
+		uniresp.RespondWithErrorJSON(ctx, err, mapError(err))
 		return
 	}
 
@@ -113,23 +78,6 @@ func (a *ActionHandler) Collocations(ctx *gin.Context) {
 				ans.Matches = append(ans.Matches, colls)
 			}
 	*/
-	ans := make([]simpleCollocation, len(result))
-	for i, v := range result {
-		lm, lmf := v.LemmaAndFn()
-		col, colf := v.CollocateAndFn()
-		ans[i] = simpleCollocation{
-			SearchMatch: lemmaInfo{
-				Value:         lm,
-				SyntacticFunc: lmf,
-			},
-			Collocate: lemmaInfo{
-				Value:         col,
-				SyntacticFunc: colf,
-			},
-			LogDice:    math.Round(v.LogDice*100) / 100,
-			TScore:     math.Round(v.TScore*100) / 100,
-			MutualDist: float64(v.AvgMutualDist()),
-		}
-	}
-	uniresp.WriteJSONResponse(ctx.Writer, ans)
+
+	uniresp.WriteJSONResponse(ctx.Writer, result)
 }

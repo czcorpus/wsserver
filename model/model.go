@@ -17,13 +17,18 @@
 package model
 
 import (
-	"fmt"
+	"errors"
 	"os"
 
 	"github.com/sajari/word2vec"
 )
 
-type modelInfo struct {
+var (
+	ErrModelNotFound     = errors.New("model not found")
+	ErrModelConfNotFound = errors.New("model configuration not found")
+)
+
+type ModelInfo struct {
 	Name        string `json:"name"`
 	Size        int    `json:"size"`
 	Description string `json:"description"`
@@ -47,30 +52,6 @@ func isFile(path string) bool {
 
 //  -------------------------------
 
-// ModelNotFoundError specifies situation when
-// a model for a corpus is not available
-type ModelNotFoundError struct {
-	Corpname  string
-	ModelName string
-}
-
-func (m ModelNotFoundError) Error() string {
-	return fmt.Sprintf("Model %s/%s not found", m.Corpname, m.ModelName)
-}
-
-// ModelConfNotFoundError specifies situation when
-// a model for a corpus is not available
-type ModelConfNotFoundError struct {
-	Corpname  string
-	ModelName string
-}
-
-func (m *ModelConfNotFoundError) Error() string {
-	return fmt.Sprintf("Model configuration for %s/%s not found", m.Corpname, m.ModelName)
-}
-
-//  -------------------------------
-
 // Provider is a wrapper around word2vec with support
 // for multiple models. Please be aware though that each
 // model is typically quite memory consuming.
@@ -86,10 +67,7 @@ func (m *Provider) FindModel(corpusName string, modelName string) (*ModelConf, e
 			return &mc, nil
 		}
 	}
-	return nil, &ModelConfNotFoundError{
-		Corpname:  corpusName,
-		ModelName: modelName,
-	}
+	return nil, ErrModelConfNotFound
 }
 
 func (m *Provider) access(conf *ModelConf) (*word2vec.Model, error) {
@@ -97,10 +75,7 @@ func (m *Provider) access(conf *ModelConf) (*word2vec.Model, error) {
 	if !ok {
 		dataPath := conf.MkDataPath(m.dataDir)
 		if !isFile(dataPath) {
-			return nil, &ModelNotFoundError{
-				Corpname:  conf.Corpname,
-				ModelName: conf.ID,
-			}
+			return nil, ErrModelNotFound
 		}
 		f, err := os.Open(dataPath)
 		if err != nil {
@@ -130,27 +105,15 @@ func (m *Provider) Query(conf *ModelConf, word, pos string, limit int) ([]word2v
 	return model.CosN(expr, limit+1)
 }
 
-func (m *Provider) ListCorpora() ([]string, error) {
-	tmp := make(map[string]bool)
-	for _, item := range m.configs {
-		tmp[item.Corpname] = true
-	}
-	ans := make([]string, 0, len(tmp))
-	for k := range tmp {
-		ans = append(ans, k)
-	}
-	return ans, nil
-}
+func (m *Provider) ListModels(corpname string) ([]ModelInfo, error) {
 
-func (m *Provider) ListModels(corpname string) ([]modelInfo, error) {
-
-	ans := make([]modelInfo, 0, len(m.configs))
+	ans := make([]ModelInfo, 0, len(m.configs))
 	for _, modelConf := range m.configs {
 		if modelConf.Corpname != corpname {
 			continue
 		}
 		model, err := m.access(&modelConf)
-		info := modelInfo{
+		info := ModelInfo{
 			Name:        modelConf.ID,
 			Description: modelConf.Description,
 		}

@@ -39,6 +39,10 @@ type VersionInfo struct {
 	GitCommit string `json:"gitCommit"`
 }
 
+type MCPConfig struct {
+	SelfContained bool `json:"selfContained"`
+}
+
 type Config struct {
 	ListenAddress          string                  `json:"listenAddress"`
 	ListenPort             int                     `json:"listenPort"`
@@ -48,6 +52,7 @@ type Config struct {
 	Models                 []model.ModelConf       `json:"models"`
 	Corpora                map[string]corpora.Info `json:"corpora"`
 	Logging                logging.LoggingConf     `json:"logging"`
+	MCP                    MCPConfig               `json:"mcp"`
 }
 
 func ApplyDefaults(conf *Config) {

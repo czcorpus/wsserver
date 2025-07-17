@@ -8,4 +8,5 @@ LDFLAGS=-ldflags "-w -s -X main.version=${VERSION} -X main.buildDate=${BUILD} -X
 all: build
 
 build:
-	go build -o wsserver ${LDFLAGS}
+	go build -o wssmcp ${LDFLAGS} ./cmd/wssmcp
+	go build -o wsserver ${LDFLAGS} ./cmd/wsserver

@@ -11,11 +11,21 @@ import (
 
 	"github.com/czcorpus/cnc-gokit/logging"
 	"github.com/czcorpus/wsserver/config"
+	"github.com/czcorpus/wsserver/core"
 	"github.com/czcorpus/wsserver/model"
 	"github.com/czcorpus/wsserver/queries"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
+
+type GeneralSearcher interface {
+	SimilarlyUsedWords(
+		ctx context.Context,
+		datasetID, modelID, posOrSfn, word string,
+		limit int,
+		minScore float32,
+	) ([]queries.ResultRow, core.AppError)
+}
 
 func main() {
 	flag.Parse()
@@ -40,14 +50,20 @@ func main() {
 
 	w2vModels := model.NewProvider(conf.DataDir, conf.Models)
 
-	searcher, err := queries.NewSearchProvider(
-		conf.DataDir,
-		collDbMap,
-		w2vModels,
-	)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to instantiate searcher: %s\n", err)
-		os.Exit(1)
+	var searcher GeneralSearcher
+	if conf.MCP.SelfContained {
+		searcher, err = queries.NewSearchProvider(
+			conf.DataDir,
+			collDbMap,
+			w2vModels,
+		)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to instantiate searcher: %s\n", err)
+			os.Exit(1)
+		}
+	} else {
+		searcher = NewHTTPClientSearcher()
+
 	}
 
 	// Create a new MCP server
@@ -89,7 +105,7 @@ func main() {
 		similarWordsTool,
 		func(ctx context.Context, request mcp.CallToolRequest,
 		) (*mcp.CallToolResult, error) {
-			fmt.Println("method invoked: similarly_used_words")
+			fmt.Fprintln(os.Stderr, "method invoked: similarly_used_words")
 			// Extract required parameters using the helper methods
 			datasetID, err := request.RequireString("dataset_id")
 			if err != nil {
@@ -101,10 +117,7 @@ func main() {
 				return mcp.NewToolResultError(err.Error()), nil
 			}
 
-			posOrSfn, err := request.RequireString("pos_or_sfn")
-			if err != nil {
-				return mcp.NewToolResultError(err.Error()), nil
-			}
+			posOrSfn := request.GetString("pos_or_sfn", "")
 
 			word, err := request.RequireString("word")
 			if err != nil {
@@ -118,7 +131,7 @@ func main() {
 
 			// Call your domain function
 			results, appErr := searcher.SimilarlyUsedWords(ctx, datasetID, modelID, posOrSfn, word, limit, float32(minScore))
-			fmt.Println("RESULTS:", results)
+			fmt.Fprintln(os.Stderr, "RESULTS:", results)
 			if !appErr.IsZero() {
 				return mcp.NewToolResultError(fmt.Sprintf("Error: %v", appErr)), nil
 			}
@@ -133,6 +146,6 @@ func main() {
 
 	// Start the server
 	if err := server.ServeStdio(s); err != nil {
-		fmt.Printf("Server error: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Server error: %v\n", err)
 	}
 }

@@ -82,6 +82,9 @@ func (searcher *HTTPClientSearcher) SimilarlyUsedWords(
 	}
 	resp, err := searcher.client.GET(baseURL, args, map[string]string{})
 	ans := make([]queries.ResultRow, 0, min(50, limit))
+	fmt.Println("RESP: ", resp)
+	// TODO unfinished code
+	fmt.Println("ans: ", ans)
 
 	return nil, core.AppError{}
 }

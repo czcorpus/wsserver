@@ -121,6 +121,7 @@ func main() {
 		)
 		engine.GET(
 			"/dataset/:corpusId/collocations-by-dependency/:depType/:word",
+			handler.CollsByDepType,
 		)
 
 		srv := &http.Server{

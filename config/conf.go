@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package config
 
 import (
 	"encoding/json"
@@ -39,6 +39,10 @@ type VersionInfo struct {
 	GitCommit string `json:"gitCommit"`
 }
 
+type MCPConfig struct {
+	SelfContained bool `json:"selfContained"`
+}
+
 type Config struct {
 	ListenAddress          string                  `json:"listenAddress"`
 	ListenPort             int                     `json:"listenPort"`
@@ -48,6 +52,7 @@ type Config struct {
 	Models                 []model.ModelConf       `json:"models"`
 	Corpora                map[string]corpora.Info `json:"corpora"`
 	Logging                logging.LoggingConf     `json:"logging"`
+	MCP                    MCPConfig               `json:"mcp"`
 }
 
 func ApplyDefaults(conf *Config) {
@@ -68,7 +73,7 @@ func ApplyDefaults(conf *Config) {
 
 }
 
-func loadConfig(path string) (*Config, error) {
+func Load(path string) (*Config, error) {
 	if path == "" {
 		return nil, fmt.Errorf("Config path not specified")
 	}

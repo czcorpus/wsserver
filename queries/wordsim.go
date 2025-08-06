@@ -127,9 +127,6 @@ func (wss *SearchProvider) Collocations(
 	limit, minScore int,
 ) ([]simpleCollocation, core.AppError) {
 
-	if syntaxFn != "" {
-		word = word + "_" + syntaxFn
-	}
 	if !wss.collDBs.Contains(datasetID) {
 		return []simpleCollocation{}, core.NewAppError(
 			fmt.Sprintf("collocations dataset %s not found", datasetID),
@@ -138,9 +135,13 @@ func (wss *SearchProvider) Collocations(
 		)
 	}
 	db := wss.collDBs[datasetID]
+
 	result, err := scoll.FromDatabase(db).GetCollocations(
 		word,
+		scoll.WithLimit(limit),
 		scoll.WithSortBy("tscore"),
+		scoll.WithCollocateGroupByDeprel(),
+		scoll.WithLemmaGroupByDeprel(),
 	)
 	if err != nil {
 		return []simpleCollocation{}, core.NewAppError(

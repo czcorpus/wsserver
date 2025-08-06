@@ -25,7 +25,6 @@ type ModelConf struct {
 	ContainsPoS        bool   `json:"containsPos"`
 	Description        string `json:"description"`
 	SyntaxDatabasePath string `json:"syntaxDatabasePath"`
-	CorpusSize         int64  `json:"corpusSize"`
 }
 
 func (m *ModelConf) ModelKey() string {

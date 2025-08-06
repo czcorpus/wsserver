@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/czcorpus/scollector/scoll"
 	"github.com/czcorpus/wsserver/core"
 	"github.com/czcorpus/wsserver/model"
 	"github.com/sajari/word2vec"
@@ -137,8 +138,10 @@ func (wss *SearchProvider) Collocations(
 		)
 	}
 	db := wss.collDBs[datasetID]
-	modelInfo, err := wss.modelProvider.FindModel(datasetID, "nce")                       // TODO
-	result, err := db.CalculateMeasures(word, int(modelInfo.CorpusSize), limit, "tscore") // TODO
+	result, err := scoll.FromDatabase(db).GetCollocations(
+		word,
+		scoll.WithSortBy("tscore"),
+	)
 	if err != nil {
 		return []simpleCollocation{}, core.NewAppError(
 			fmt.Sprintf("collocations dataset %s not found", datasetID),
@@ -149,20 +152,20 @@ func (wss *SearchProvider) Collocations(
 
 	ans := make([]simpleCollocation, len(result))
 	for i, v := range result {
-		lm, lmf := v.LemmaAndFn()
-		col, colf := v.CollocateAndFn()
 		ans[i] = simpleCollocation{
 			SearchMatch: lemmaInfo{
-				Value:         lm,
-				SyntacticFunc: lmf,
+				Value:         v.Lemma.Value,
+				PoS:           v.Lemma.PoS,
+				SyntacticFunc: v.Lemma.Deprel,
 			},
 			Collocate: lemmaInfo{
-				Value:         col,
-				SyntacticFunc: colf,
+				Value:         v.Collocate.Value,
+				PoS:           v.Collocate.PoS,
+				SyntacticFunc: v.Collocate.Deprel,
 			},
 			LogDice:    math.Round(v.LogDice*100) / 100,
 			TScore:     math.Round(v.TScore*100) / 100,
-			MutualDist: float64(v.AvgMutualDist()),
+			MutualDist: v.MutualDist,
 		}
 	}
 

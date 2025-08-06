@@ -86,6 +86,7 @@ func mergeByFunc(data []ResultRow, srchWord string) []ResultRow {
 
 type lemmaInfo struct {
 	Value         string `json:"value"`
+	PoS           string `json:"pos"`
 	SyntacticFunc string `json:"syntacticFunc"`
 }
 

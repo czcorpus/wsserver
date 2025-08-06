@@ -1,10 +1,12 @@
 module github.com/czcorpus/wsserver
 
-go 1.23.4
+go 1.24.1
+
+toolchain go1.24.5
 
 require (
 	github.com/czcorpus/cnc-gokit v0.14.0
-	github.com/czcorpus/scollector v0.0.12
+	github.com/czcorpus/scollector v0.3.0
 	github.com/gin-gonic/gin v1.10.1
 	github.com/mark3labs/mcp-go v0.34.0
 	github.com/rs/zerolog v1.34.0
@@ -12,7 +14,6 @@ require (
 )
 
 require (
-	github.com/BurntSushi/toml v1.5.0 // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -56,7 +57,5 @@ require (
 	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
-	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

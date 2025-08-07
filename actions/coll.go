@@ -6,6 +6,7 @@ import (
 
 	"github.com/czcorpus/cnc-gokit/unireq"
 	"github.com/czcorpus/cnc-gokit/uniresp"
+	"github.com/czcorpus/scollector/scoll"
 	"github.com/gin-gonic/gin"
 )
 
@@ -30,7 +31,7 @@ func (a *ActionHandler) Collocations(ctx *gin.Context) {
 
 	corpusID := ctx.Param("corpusId")
 	word := ctx.Param("word")
-	syntaxFn := ctx.Param("fn")
+	pos := ctx.Param("pos")
 
 	limit, ok := unireq.GetURLIntArgOrFail(ctx, "limit", 10)
 	if !ok {
@@ -43,41 +44,38 @@ func (a *ActionHandler) Collocations(ctx *gin.Context) {
 		return
 	}
 
-	result, err := a.searcher.Collocations(ctx, corpusID, syntaxFn, word, limit, int(minScore))
+	result, err := a.searcher.Collocations(ctx, corpusID, word, pos, limit, int(minScore))
 	if !err.IsZero() {
 		uniresp.RespondWithErrorJSON(ctx, err, mapError(err))
 		return
 	}
-
-	/*
-		ans := collGroupedResponse{
-			Matches: make([]lemmaCollocates, 0, len(result)),
-		}
-			merged := collections.NewMultidict[storage.Collocation]()
-			for _, v := range result {
-				merged.Add(v.RawLemma, v)
-			}
-			for _, v := range merged.Iterate {
-				lemma, lemmaFn := v[0].LemmaAndFn() // len(v) is always > 0
-				colls := lemmaCollocates{
-					Lemma:      lemma,
-					SyntaxFn:   lemmaFn,
-					Collocates: make([]collocate, 0, limit),
-				}
-				for _, coll := range v {
-					lemma, lemmaFn := coll.CollocateAndFn()
-					colls.Collocates = append(
-						colls.Collocates,
-						collocate{
-							Lemma:    lemma,
-							SyntaxFn: lemmaFn,
-							Score:    float32(coll.LogDice),
-						},
-					)
-				}
-				ans.Matches = append(ans.Matches, colls)
-			}
-	*/
-
 	uniresp.WriteJSONResponse(ctx.Writer, result)
+}
+
+func (a *ActionHandler) CollocationsOfType(ctx *gin.Context) {
+
+	corpusID := ctx.Param("corpusId")
+	word := ctx.Param("word")
+	pos := ctx.Param("pos")
+	collType := ctx.Param("type")
+
+	limit, ok := unireq.GetURLIntArgOrFail(ctx, "limit", 10)
+	if !ok {
+		uniresp.RespondWithErrorJSON(ctx, fmt.Errorf("invalid value of 'limit'"), http.StatusUnprocessableEntity)
+		return
+	}
+	minScore, ok := unireq.GetURLFloatArgOrFail(ctx, "minScore", 0)
+	if !ok {
+		uniresp.RespondWithErrorJSON(ctx, fmt.Errorf("invalid value of 'limit'"), http.StatusUnprocessableEntity)
+		return
+	}
+
+	result, err := a.searcher.CollocationsOfType(
+		ctx, corpusID, word, pos, scoll.PredefinedSearch(collType), limit, int(minScore))
+	if !err.IsZero() {
+		uniresp.RespondWithErrorJSON(ctx, err, mapError(err))
+		return
+	}
+	uniresp.WriteJSONResponse(ctx.Writer, result)
+
 }

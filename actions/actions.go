@@ -98,31 +98,6 @@ func (a *ActionHandler) WordSimilarity(ctx *gin.Context) {
 	uniresp.WriteJSONResponse(ctx.Writer, res)
 }
 
-func (a *ActionHandler) CollsByDepType(ctx *gin.Context) {
-	/*
-			TODO:
-		ModifiersOf
-		// [p_lemma="team" & deprel="nmod" & upos="NOUN"]
-		fx, err := cdb.GetFreq("", "NOUN", w.V, w.PoS, "nmod")
-
-
-		NounsModifiedBy
-		// [lemma="team" & deprel="nmod" & p_upos="NOUN"]
-		fx, err := cdb.GetFreq(w.V, w.PoS, "", "NOUN", "nmod")
-
-
-		VerbsSubject
-		// [lemma="team" & deprel="nsubj" & p_upos="VERB"]
-		fx, err := cdb.GetFreq(w.V, w.PoS, "", "VERB", "nsubj")
-
-
-		VerbsObject
-		// [lemma="team" & deprel="obj|iobj" & p_upos="VERB"]
-		fx, err := cdb.GetFreq(w.V, w.PoS, "", "VERB", "obj|iobj")
-
-	*/
-}
-
 // NewActionHandler is a recommended factory function for creating ActionHandler instance
 func NewActionHandler(
 	dataDir string,

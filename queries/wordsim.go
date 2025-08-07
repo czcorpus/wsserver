@@ -121,9 +121,69 @@ func (wss *SearchProvider) SimilarlyUsedWords(
 	return ans, core.AppError{}
 }
 
+func (wss *SearchProvider) CollocationsOfType(
+	ctx context.Context,
+	datasetID, word, pos string,
+	collType scoll.PredefinedSearch,
+	limit, minScore int,
+) ([]simpleCollocation, core.AppError) {
+
+	if collType != scoll.ModifiersOf && collType != scoll.NounsModifiedBy &&
+		collType != scoll.VerbsSubject && collType != scoll.VerbsObject {
+
+		return []simpleCollocation{}, core.NewAppError("unsupported collocation type", core.ErrorTypeInvalidArguments, nil)
+	}
+
+	if !wss.collDBs.Contains(datasetID) {
+		return []simpleCollocation{}, core.NewAppError(
+			fmt.Sprintf("collocations dataset %s not found", datasetID),
+			core.ErrorTypeNotFound,
+			nil,
+		)
+	}
+	db := wss.collDBs[datasetID]
+
+	result, err := scoll.FromDatabase(db).GetCollocations(
+		word,
+		scoll.WithLimit(limit),
+		scoll.WithSortBy("tscore"),
+		scoll.WithCollocateGroupByDeprel(),
+		scoll.WithLemmaGroupByDeprel(),
+		scoll.WithPredefinedSearch(collType),
+	)
+	if err != nil {
+		return []simpleCollocation{}, core.NewAppError(
+			fmt.Sprintf("collocations dataset %s not found", datasetID),
+			core.ErrorTypeInternalError,
+			err,
+		)
+	}
+
+	ans := make([]simpleCollocation, len(result))
+	for i, v := range result {
+		ans[i] = simpleCollocation{
+			SearchMatch: lemmaInfo{
+				Value:         v.Lemma.Value,
+				PoS:           v.Lemma.PoS,
+				SyntacticFunc: v.Lemma.Deprel,
+			},
+			Collocate: lemmaInfo{
+				Value:         v.Collocate.Value,
+				PoS:           v.Collocate.PoS,
+				SyntacticFunc: v.Collocate.Deprel,
+			},
+			LogDice:    math.Round(v.LogDice*100) / 100,
+			TScore:     math.Round(v.TScore*100) / 100,
+			MutualDist: v.MutualDist,
+		}
+	}
+
+	return ans, core.AppError{}
+}
+
 func (wss *SearchProvider) Collocations(
 	ctx context.Context,
-	datasetID, syntaxFn, word string,
+	datasetID, word, pos string,
 	limit, minScore int,
 ) ([]simpleCollocation, core.AppError) {
 
@@ -138,6 +198,7 @@ func (wss *SearchProvider) Collocations(
 
 	result, err := scoll.FromDatabase(db).GetCollocations(
 		word,
+		scoll.WithPoS(pos),
 		scoll.WithLimit(limit),
 		scoll.WithSortBy("tscore"),
 		scoll.WithCollocateGroupByDeprel(),

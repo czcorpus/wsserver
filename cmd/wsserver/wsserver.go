@@ -116,6 +116,10 @@ func main() {
 			handler.CollocationsOfType,
 		)
 		engine.GET(
+			"/dataset/:corpusId/collocationsOfType/:type/:word",
+			handler.CollocationsOfType,
+		)
+		engine.GET(
 			"/dataset/:corpusId/similarWords/:modelId",
 			handler.HandleModelInfo,
 		)

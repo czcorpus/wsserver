@@ -146,9 +146,7 @@ func (wss *SearchProvider) CollocationsOfType(
 	result, err := scoll.FromDatabase(db).GetCollocations(
 		word,
 		scoll.WithLimit(limit),
-		scoll.WithSortBy("tscore"),
-		scoll.WithCollocateGroupByDeprel(),
-		scoll.WithLemmaGroupByDeprel(),
+		scoll.WithSortBy("rrf"),
 		scoll.WithPredefinedSearch(collType),
 	)
 	if err != nil {
@@ -163,17 +161,18 @@ func (wss *SearchProvider) CollocationsOfType(
 	for i, v := range result {
 		ans[i] = simpleCollocation{
 			SearchMatch: lemmaInfo{
-				Value:         v.Lemma.Value,
-				PoS:           v.Lemma.PoS,
-				SyntacticFunc: v.Lemma.Deprel,
+				Value: v.Lemma.Value,
+				PoS:   v.Lemma.PoS,
 			},
 			Collocate: lemmaInfo{
-				Value:         v.Collocate.Value,
-				PoS:           v.Collocate.PoS,
-				SyntacticFunc: v.Collocate.Deprel,
+				Value: v.Collocate.Value,
+				PoS:   v.Collocate.PoS,
 			},
+			Deprel:     v.Deprel,
 			LogDice:    math.Round(v.LogDice*100) / 100,
 			TScore:     math.Round(v.TScore*100) / 100,
+			LMI:        math.Round(v.LMI*100) / 100,
+			RRF:        math.Round(v.RRFScore*1000) / 1000,
 			MutualDist: v.MutualDist,
 		}
 	}
@@ -200,9 +199,8 @@ func (wss *SearchProvider) Collocations(
 		word,
 		scoll.WithPoS(pos),
 		scoll.WithLimit(limit),
-		scoll.WithSortBy("tscore"),
-		scoll.WithCollocateGroupByDeprel(),
-		scoll.WithLemmaGroupByDeprel(),
+		scoll.WithSortBy("rrf"),
+		scoll.WithGroupByDeprel(),
 	)
 	if err != nil {
 		return []simpleCollocation{}, core.NewAppError(
@@ -216,17 +214,18 @@ func (wss *SearchProvider) Collocations(
 	for i, v := range result {
 		ans[i] = simpleCollocation{
 			SearchMatch: lemmaInfo{
-				Value:         v.Lemma.Value,
-				PoS:           v.Lemma.PoS,
-				SyntacticFunc: v.Lemma.Deprel,
+				Value: v.Lemma.Value,
+				PoS:   v.Lemma.PoS,
 			},
 			Collocate: lemmaInfo{
-				Value:         v.Collocate.Value,
-				PoS:           v.Collocate.PoS,
-				SyntacticFunc: v.Collocate.Deprel,
+				Value: v.Collocate.Value,
+				PoS:   v.Collocate.PoS,
 			},
+			Deprel:     v.Deprel,
 			LogDice:    math.Round(v.LogDice*100) / 100,
 			TScore:     math.Round(v.TScore*100) / 100,
+			LMI:        math.Round(v.LMI*100) / 100,
+			RRF:        math.Round(v.RRFScore*1000) / 1000,
 			MutualDist: v.MutualDist,
 		}
 	}

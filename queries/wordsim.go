@@ -148,6 +148,7 @@ func (wss *SearchProvider) CollocationsOfType(
 		scoll.WithLimit(limit),
 		scoll.WithSortBy("rrf"),
 		scoll.WithPredefinedSearch(collType),
+		scoll.WithMaxAvgCollocateDist(1.499),
 	)
 	if err != nil {
 		return []simpleCollocation{}, core.NewAppError(

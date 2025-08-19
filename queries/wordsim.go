@@ -201,7 +201,6 @@ func (wss *SearchProvider) Collocations(
 		scoll.WithPoS(pos),
 		scoll.WithLimit(limit),
 		scoll.WithSortBy("rrf"),
-		scoll.WithGroupByDeprel(),
 	)
 	if err != nil {
 		return []simpleCollocation{}, core.NewAppError(

@@ -84,14 +84,14 @@ func mergeByFunc(data []ResultRow, srchWord string) []ResultRow {
 
 // ----------------------------
 
-type lemmaInfo struct {
+type LemmaInfo struct {
 	Value string `json:"value"`
 	PoS   string `json:"pos"`
 }
 
-type simpleCollocation struct {
-	SearchMatch lemmaInfo `json:"searchMatch"`
-	Collocate   lemmaInfo `json:"collocate"`
+type SimpleCollocation struct {
+	SearchMatch LemmaInfo `json:"searchMatch"`
+	Collocate   LemmaInfo `json:"collocate"`
 	Deprel      string    `json:"deprel"`
 	LogDice     float64   `json:"logDice"`
 	TScore      float64   `json:"tscore"`

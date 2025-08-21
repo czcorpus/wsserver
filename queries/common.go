@@ -1,7 +1,9 @@
 package queries
 
 import (
+	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/czcorpus/cnc-gokit/collections"
@@ -89,13 +91,23 @@ type LemmaInfo struct {
 	PoS   string `json:"pos"`
 }
 
+type SafeFloat float64
+
+func (v SafeFloat) MarshalJSON() ([]byte, error) {
+	if math.IsNaN(float64(v)) || math.IsInf(float64(v), -1) || math.IsInf(float64(v), 1) {
+		return []byte("null"), nil
+	}
+	return json.Marshal(float64(v))
+}
+
 type SimpleCollocation struct {
 	SearchMatch LemmaInfo `json:"searchMatch"`
 	Collocate   LemmaInfo `json:"collocate"`
 	Deprel      string    `json:"deprel"`
-	LogDice     float64   `json:"logDice"`
-	TScore      float64   `json:"tscore"`
-	LMI         float64   `json:"lmi"`
-	RRF         float64   `json:"rrf"`
-	MutualDist  float64   `json:"mutualDist"`
+	LogDice     SafeFloat `json:"logDice"`
+	TScore      SafeFloat `json:"tscore"`
+	LMI         SafeFloat `json:"lmi"`
+	LL          SafeFloat `json:"ll"`
+	RRF         SafeFloat `json:"rrf"`
+	MutualDist  SafeFloat `json:"mutualDist"`
 }

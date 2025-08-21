@@ -160,11 +160,12 @@ func (wss *SearchProvider) Collocations(
 				PoS:   v.Collocate.PoS,
 			},
 			Deprel:     v.Deprel,
-			LogDice:    math.Round(v.LogDice*100) / 100,
-			TScore:     math.Round(v.TScore*100) / 100,
-			LMI:        math.Round(v.LMI*100) / 100,
-			RRF:        math.Round(v.RRFScore*1000) / 1000,
-			MutualDist: v.MutualDist,
+			LogDice:    SafeFloat(math.Round(v.LogDice*100) / 100),
+			TScore:     SafeFloat(math.Round(v.TScore*100) / 100),
+			LMI:        SafeFloat(math.Round(v.LMI*100) / 100),
+			LL:         SafeFloat(math.Round(v.LogLikelihood*100) / 100),
+			RRF:        SafeFloat(math.Round(v.RRFScore*1000) / 1000),
+			MutualDist: SafeFloat(v.MutualDist),
 		}
 	}
 

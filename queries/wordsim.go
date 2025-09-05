@@ -94,8 +94,24 @@ func (wss *SearchProvider) SimilarlyUsedWords(
 			)
 		}
 		for _, v := range variants {
-			_, deprel := splitByLastUnderscore(v.Value)
-			syntaxFnMatches = append(syntaxFnMatches, strings.TrimSpace(deprel)) // TODO workaround, should be solved in the lib
+			if v.Value != word {
+				continue
+			}
+			entries, err := db.GetMatchingLemmaProps(v.TokenID)
+			if err != nil {
+				return []ResultRow{}, core.NewAppError(
+					"failed to get requested model",
+					core.ErrorTypeInternalError,
+					err,
+				)
+			}
+			sort.Slice(entries, func(i, j int) bool { return entries[i].Freq > entries[j].Freq })
+			if len(entries) > 10 {
+				entries = entries[:10]
+			}
+			for _, entry := range entries {
+				syntaxFnMatches = append(syntaxFnMatches, entry.Deprel)
+			}
 		}
 
 	} else {
@@ -118,6 +134,9 @@ func (wss *SearchProvider) SimilarlyUsedWords(
 	sort.Slice(ans, func(i, j int) bool {
 		return ans[i].Score > ans[j].Score
 	})
+	if len(ans) > limit {
+		ans = ans[:limit]
+	}
 	return ans, core.AppError{}
 }
 

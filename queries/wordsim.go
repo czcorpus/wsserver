@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/czcorpus/scollector/scoll"
+	"github.com/czcorpus/depreldb/scoll"
 	"github.com/czcorpus/wsserver/core"
 	"github.com/czcorpus/wsserver/model"
 	"github.com/sajari/word2vec"
@@ -188,6 +188,54 @@ func (wss *SearchProvider) Collocations(
 		}
 	}
 
+	return ans, core.AppError{}
+}
+
+type dictItem struct {
+	Lemma    string    `json:"lemma"`
+	PoS      string    `json:"pos"`
+	Freq     SafeFloat `json:"freq"`
+	TextType string    `json:"textType"`
+}
+
+func (wss *SearchProvider) Dictionary(datasetID, word string) ([]dictItem, core.AppError) {
+	fmt.Println("DATASET: ", datasetID)
+	db, ok := wss.collDBs[datasetID]
+	if !ok {
+		return []dictItem{}, core.NewAppError(
+			fmt.Sprintf("unknown dataset: %s", datasetID), core.ErrorTypeNotFound, nil)
+	}
+	variants, err := db.GetLemmaIDsByPrefix(word)
+	fmt.Println("VARIANRTS: ", variants)
+	if err != nil {
+		return []dictItem{}, core.NewAppError(
+			"failed to get matching lemmas",
+			core.ErrorTypeInternalError,
+			err,
+		)
+	}
+	ans := make([]dictItem, 0, 20)
+	for _, v := range variants {
+		if v.Value != word {
+			continue
+		}
+		entries, err := db.GetMatchingLemmaProps(v.TokenID)
+		if err != nil {
+			return []dictItem{}, core.NewAppError(
+				"failed to get requested model",
+				core.ErrorTypeInternalError,
+				err,
+			)
+		}
+		for _, entry := range entries {
+			ans = append(ans, dictItem{
+				Lemma:    v.Value,
+				PoS:      entry.Pos,
+				Freq:     SafeFloat(entry.Freq),
+				TextType: entry.TextType,
+			})
+		}
+	}
 	return ans, core.AppError{}
 }
 

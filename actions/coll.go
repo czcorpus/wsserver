@@ -6,7 +6,7 @@ import (
 
 	"github.com/czcorpus/cnc-gokit/unireq"
 	"github.com/czcorpus/cnc-gokit/uniresp"
-	"github.com/czcorpus/scollector/scoll"
+	"github.com/czcorpus/depreldb/scoll"
 	"github.com/czcorpus/wsserver/queries"
 	"github.com/gin-gonic/gin"
 )

@@ -94,8 +94,22 @@ func (a *ActionHandler) WordSimilarity(ctx *gin.Context) {
 		uniresp.RespondWithErrorJSON(
 			ctx, err, mapError(err),
 		)
+		return
 	}
 	uniresp.WriteJSONResponse(ctx.Writer, res)
+}
+
+func (a *ActionHandler) Dictionary(ctx *gin.Context) {
+	datasetID := ctx.Param("corpusId")
+	word := ctx.Param("word")
+	ans, err := a.searcher.Dictionary(datasetID, word)
+	if !err.IsZero() {
+		uniresp.RespondWithErrorJSON(
+			ctx, err, mapError(err),
+		)
+		return
+	}
+	uniresp.WriteJSONResponse(ctx.Writer, ans)
 }
 
 // NewActionHandler is a recommended factory function for creating ActionHandler instance

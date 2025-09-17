@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/czcorpus/cnc-gokit/collections"
-	"github.com/czcorpus/scollector/storage"
+	"github.com/czcorpus/depreldb/storage"
 	"github.com/czcorpus/wsserver/model"
 	"github.com/sajari/word2vec"
 )

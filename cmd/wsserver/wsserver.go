@@ -96,13 +96,10 @@ func main() {
 		}
 
 		engine.GET(
-			"/dataset/:corpusId/similarWords/:modelId/:word/:fn",
-			handler.WordSimilarity,
+			"/dataset/:corpusId/dictionary/:word",
+			handler.Dictionary,
 		)
-		engine.GET(
-			"/dataset/:corpusId/similarWords/:modelId/:word",
-			handler.WordSimilarity,
-		)
+
 		engine.GET(
 			"/dataset/:corpusId/collocations/:word/:pos",
 			handler.Collocations,
@@ -122,6 +119,15 @@ func main() {
 		engine.GET(
 			"/dataset/:corpusId/similarWords/:modelId",
 			handler.HandleModelInfo,
+		)
+
+		engine.GET(
+			"/dataset/:corpusId/similarWords/:modelId/:word/:fn",
+			handler.WordSimilarity,
+		)
+		engine.GET(
+			"/dataset/:corpusId/similarWords/:modelId/:word",
+			handler.WordSimilarity,
 		)
 		engine.GET(
 			"/dataset/:corpusId/similarWords",

@@ -6,7 +6,7 @@ toolchain go1.24.5
 
 require (
 	github.com/czcorpus/cnc-gokit v0.15.0
-	github.com/czcorpus/scollector v0.12.0
+	github.com/czcorpus/depreldb v0.12.2
 	github.com/gin-gonic/gin v1.10.1
 	github.com/mark3labs/mcp-go v0.34.0
 	github.com/rs/zerolog v1.34.0

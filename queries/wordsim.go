@@ -97,7 +97,7 @@ func (wss *SearchProvider) SimilarlyUsedWords(
 			if v.Value != word {
 				continue
 			}
-			entries, err := db.GetMatchingLemmaProps(v.TokenID)
+			entries, err := db.GetLemmaDeprelValues(v.TokenID)
 			if err != nil {
 				return []ResultRow{}, core.NewAppError(
 					"failed to get requested model",
@@ -105,12 +105,11 @@ func (wss *SearchProvider) SimilarlyUsedWords(
 					err,
 				)
 			}
-			sort.Slice(entries, func(i, j int) bool { return entries[i].Freq > entries[j].Freq })
 			if len(entries) > 10 {
 				entries = entries[:10]
 			}
 			for _, entry := range entries {
-				syntaxFnMatches = append(syntaxFnMatches, entry.Deprel)
+				syntaxFnMatches = append(syntaxFnMatches, entry.Value)
 			}
 		}
 
@@ -120,6 +119,7 @@ func (wss *SearchProvider) SimilarlyUsedWords(
 
 	ans := make([]ResultRow, 0, len(syntaxFnMatches)*limit)
 	for _, posItem := range syntaxFnMatches {
+		fmt.Println("POSITEM >> ", posItem)
 		matches, err := wss.modelProvider.Query(modelConf, word, posItem, limit+1)
 		if err != nil && !isNotFound(err) {
 			return []ResultRow{}, core.NewAppError(
